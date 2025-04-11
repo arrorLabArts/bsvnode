@@ -1,46 +1,74 @@
-# bsvnode installation step by step
+Okay, here is the provided text formatted in Markdown:
 
+```markdown
+# Installing Bitcoin SV Node on Linux
 
-The following instructions describe installing Bitcoin SV Node using tools available in most mainstream Linux distributions. The assumption has been made that you are using a Bourne-like shell such as bash.
+The following instructions describe installing Bitcoin SV Node using tools available in most mainstream Linux distributions. The assumption has been made that you are using a Bourne-like shell such as `bash`.
 
-To start the install of Bitcoin, make sure you use an account that can use su or sudo to install software into directories owned by the root user.
+To start the install of Bitcoin, make sure you use an account that can use `su` or `sudo` to install software into directories owned by the root user.
 
-Download the zipped release of your choosing, for this example we are using 1.0.16 which is the latest release at the time of writing:
+## Download the Release
 
-Copy
+Download the zipped release of your choosing. For this example, we are using 1.1.0 (note: the original text mentions 1.0.16 earlier but uses 1.1.0 in the commands).
+
+```bash
 wget https://download.bitcoinsv.io/bitcoinsv/1.1.0/bitcoin-sv-1.1.0-x86_64-linux-gnu.tar.gz
-Confirm downloaded file sha hash matches those provided at download.bitcoinsv.io for the version you have downloaded.
+```
 
-Copy
+## Verify Download
+
+Confirm the downloaded file SHA hash matches those provided at download.bitcoinsv.io for the version you have downloaded.
+
+```bash
 sha256sum bitcoin-sv-1.1.0-x86_64-linux-gnu.tar.gz
-# Expected Output 
+# Expected Output
 # ec0470ee43224be4f1fe9315b96a72c14efdccac82416263916f3c1576719ad3  bitcoin-sv-1.1.0-x86_64-linux-gnu.tar.gz
-Locate the file you downloaded and extract it using the tar command followed by the argument xzf followed by the file name. The argument xzf means eXtract the gZipped tar archive file. For example, for a 64-bit tar archive in your current directory, the command is:
+```
 
-Copy
+## Extract the Archive
+
+Locate the file you downloaded and extract it using the `tar` command followed by the argument `xvf` followed by the file name. The argument `xvf` means eXtract the Verbose tar archive File (assuming `v` for verbose, though the original text mentioned `xzf` which implies gZipped). We will use `xvf` as shown in the command example.
+
+For example, for a 64-bit tar archive in your current directory, the command is:
+
+```bash
 tar xvf bitcoin-sv-1.1.0-x86_64-linux-gnu.tar.gz
-Create a symbolic link from a new directory called bitcoin to the bitcoin-sv-1.0.16 directory you just made by unzipping for easier use and updates:
+```
 
-Copy
+## Create Symbolic Link
+
+Create a symbolic link from a new directory called `bitcoin` to the `bitcoin-sv-1.1.0` directory you just made by unzipping for easier use and updates:
+
+```bash
 ln -s bitcoin-sv-1.1.0 bitcoin
-Create a bitcoin-data directory to put bitcoin data in (or else Bitcoin will put data in ~/.bitcoin by default):
+```
 
-Copy
+## Create Data Directory
+
+Create a `bitcoin-data` directory to put bitcoin data in (or else Bitcoin will put data in `~/.bitcoin` by default):
+
+```bash
 mkdir bitcoin-data
-Data folder considerations
-The bitcoin-data folder will contain the logs, blocks, UTXO set and various other files the SV Node needs to function. For mainnet this folder will get very big, around 350GB for the UTXO set and 12TB for the blocks as of January 2024. The UTXO set store in bitcoin-data/chainstate is used for lookups to validate transactions and should be stored on a high-performant SSD. Depending on your use case, the bitcoin-data/blocks folder can be stored on slower, cheaper HDD storage.
+```
 
-If setting up the node in AWS, see AWS Volumes Setupfor more details on a recommended setup.
+## Data Folder Considerations
 
-Config
-Create a bitcoin.conf file in the directory to configure the settings to run your node using:
+The `bitcoin-data` folder will contain the logs, blocks, UTXO set and various other files the SV Node needs to function. For mainnet this folder will get very big, around 350GB for the UTXO set and 12TB for the blocks as of January 2024. The UTXO set store in `bitcoin-data/chainstate` is used for lookups to validate transactions and should be stored on a high-performant SSD. Depending on your use case, the `bitcoin-data/blocks` folder can be stored on slower, cheaper HDD storage.
 
-Copy
+If setting up the node in AWS, see *AWS Volumes Setup* for more details on a recommended setup.
+
+## Configuration
+
+Create a `bitcoin.conf` file in the directory to configure the settings to run your node using:
+
+```bash
 cd bitcoin-data/
 vim bitcoin.conf
-A detailed list of available options can be found in Configuration. Below is an example bitcoin.conf file used by a node on the mainnet:
+```
 
-Copy
+A detailed list of available options can be found in *Configuration*. Below is an example `bitcoin.conf` file used by a node on the mainnet:
+
+```ini
 # start in background
 daemon=1
 
@@ -63,7 +91,7 @@ maxconnectionsfromaddr=1
 server=1
 rpcworkqueue=600
 rpcthreads=16
-#rpcallowip=0.0.0.0/0 
+#rpcallowip=0.0.0.0/0
 rpcuser=CHANGE_ME
 rpcpassword=CHANGE_ME
 
@@ -85,7 +113,7 @@ maxscriptcachesize=256
 # TX options
 # Minimum mining transaction fee, 1 sat / kb
 minminingtxfee=0.00000001
-# Max number and size of related Child and Parent transactions per block template 
+# Max number and size of related Child and Parent transactions per block template
 #limitancestorcount=100
 #limitdescendantcount=100
 #limitancestorsize=25000000
@@ -111,14 +139,14 @@ debugexclude=txnsrc
 debugexclude=net
 
 # Setting to 1 prevents bitcoind from clearning the log file on restart. 0/off is default
-#shrinkdebugfile=0 
+#shrinkdebugfile=0
 
 # Stores the block data in files of 2GB on disk
 # the default of 128MB will result in lots of small files
 preferredblockfilesize=2GB
 
 # Mining, biggest block size you want to mine
-blockmaxsize=4GB 
+blockmaxsize=4GB
 # When mining, consider switching to a pruned node
 # Using prune is incompatible with txindex
 #prune=100000 # Keep only last ~100GB of blocks
@@ -142,22 +170,32 @@ maxpendingresponses_gethdrsen=10
 #maxstdtxvalidationduration=500
 #maxstdtxnsperthreadratio=1000
 #maxnonstdtxvalidationduration
-Systemd
-To run Bitcoind, pass in the location of the configuration file as well as the location of where to store the bitcoin data:
+```
 
-Copy
-# Example based on user
+## Systemd Service
+
+To run Bitcoind directly, pass in the location of the configuration file as well as the location of where to store the bitcoin data:
+
+```bash
+# Example based on user 'user'
 /home/user/bitcoin/bin/bitcoind \
 -conf=/home/user/bitcoin-data/bitcoin.conf \
 -datadir=/home/user/bitcoin-data -daemon
-Create the bitcoind.service file:
+```
 
-Copy
+Create the `bitcoind.service` file for systemd:
+
+```bash
 sudo vim /etc/systemd/system/bitcoind.service
-Copy
+```
+
+Paste the following content into the file. **Remember to replace `user` with your actual username.**
+
+```systemd
 [Unit]
 Description=Bitcoin service
 After=network.target
+
 [Service]
 Type=forking
 # Make sure to replace username
@@ -170,14 +208,22 @@ PrivateTmp=true
 LimitNOFILE=65536
 # Make sure to replace username
 User=user
+
 [Install]
 WantedBy=multi-user.target
-Then start:
+```
 
-Copy
+Then start and enable the service:
+
+```bash
 sudo systemctl start bitcoind.service
 sudo systemctl enable bitcoind.service
+```
+
 The SV Node will now start and you can monitor progress in the log file. It will take several days for a fresh sync of the entire chain as of January 2024.
 
-Copy
-tail -f bitcoin-data/bitcoind.log
+```bash
+tail -f /home/user/bitcoin-data/bitcoind.log
+```
+*(Note: Adjusted log path to match the datadir used in examples)*
+```
